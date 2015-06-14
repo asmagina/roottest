@@ -17,15 +17,14 @@ void readFile(const char* filename, const char* classname)
    std::cout << "[" << classname << "] StreamerInfo info before: " << std::endl;
    gROOT->GetClass(classname)->GetStreamerInfos()->ls();
 
-   TList* list = 0;
-   readRulesFromFile(f, list);
+   std::vector<std::string> vect;
+   readRulesFromFile(f, vect);
 
-   TIter next(list);
-   while(TObjString* rule = next())
-      loadRuleIntoSystem(rule->String().Data());
+   for (std::vector<std::string>::iterator it = vect.begin(); it != vect.end(); ++it)
+      loadRuleIntoSystem(it->c_str());
    
    std::cout << "[" << classname << "] Streamer info after:" << std::endl;
-   gROOT->GetClass("Event")->GetStreamerInfos()->ls();
+   gROOT->GetClass(classname)->GetStreamerInfos()->ls();
 
-   f.Close();
+   f->Close();
 }

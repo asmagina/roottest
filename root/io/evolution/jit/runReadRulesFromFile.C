@@ -3,21 +3,23 @@
 void runReadRulesFromFile()
 {
    const char* filename = "test.root";
-   TFile *f = TFile::Open();
+   TFile *f = TFile::Open(filename);
    if (!f) {
       std::cerr << "Cannot open file " << filename << std::endl;
       return;
    }
 
-   TList* list = 0;
-   readRulesFromFile(f, list); 
+   std::vector<std::string> vect;
+   readRulesFromFile(f, vect); 
 
-   if (!list) {
-      std::cout << "Empty list with rules." << std::endl;
+   if (vect.empty()) {
+      std::cout << "No list with rules." << std::endl;
       return;
    }
 
-   list->Print();
+   std::cout << "List of rules: " << std::endl;
+   for (std::vector<std::string>::iterator it = vect.begin(); it != vect.end(); ++it)
+      std::cout << *it << std::endl;
 
-   f.Close();
+   f->Close();
 }
