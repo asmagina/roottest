@@ -96,7 +96,7 @@ bool createRuleWrapper(const ROOT::TSchemaRule* ruleobj, int n, std::string& res
       res += ((TObjString*)((*ruleobj->GetTarget())[i]))->String();
       res += "_t& ";
       res += ((TObjString*)((*ruleobj->GetTarget())[i]))->String();
-      res += "*(";
+      res += " = *(";
       res += ((TObjString*)((*ruleobj->GetTarget())[i]))->String();
       res +=  "_t *)(target + offset_";
       res += ((TObjString*)((*ruleobj->GetTarget())[i]))->String();
@@ -141,7 +141,31 @@ bool loadRuleIntoSystem(const char* rule)
    // NOTE: works only for read rules
    //
    std::string wrapper;
+   std::string wrapper_name = "read_";
+               wrapper_name += ruleobj->GetTargetClass();
+               wrapper_name += Form("_%d", rset->GetRules()->GetEntries());
    createRuleWrapper(ruleobj, rset->GetRules()->GetEntries(), wrapper);
+
+   gROOT->ProcessLine(".rawInput");
+   gROOT->ProcessLine(wrapper.c_str());
+   gROOT->ProcessLine(".rawInput");
+ 
+//   cling::runtime::gCling->declare("char* target = \"ehqeiqheoiq\";");
+   cling::runtime::gCling->declare(Form("TVirtualObject obj(TClass::GetClass(\"%s\"));", // !!
+                                        ruleobj->GetSourceClass()));             //
+
+   if (cling::runtime::gCling->process(Form("%s(target, &obj)", wrapper_name.c_str())) != 
+      cling::Interpreter::CompilationResult::kSuccess) 
+   {
+      std::cerr << "Compilation error." << std::endl;
+      delete ruleobj;
+      return false;   
+   }
+
+   cling::Value v;
+   cling::runtime::gCling->evaluate(wrapper_name.c_str(), v);
+//   ruleobj->SetReadFunctionPointer(v.getPtr());
+
    TString errmsg;
    if( !rset->AddRule( ruleobj, ROOT::TSchemaRuleSet::kCheckConflict, &errmsg ) ) {
       ::Warning( "TClass::AddRule", "The rule for class: \"%s\": version, \"%s\" and data members: \"%s\" has been skipped because it conflicts with one of the other rules (%s).",
