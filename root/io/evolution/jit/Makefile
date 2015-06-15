@@ -7,7 +7,7 @@ CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog
 # only target added.  If the name of the target is changed in the rules then
 # the name should be changed accordingly in this list.
 
-TEST_TARGETS += LoadRuleIntoSystem ReadRulesFromFile mytest
+TEST_TARGETS += LoadRuleIntoSystem ReadRulesFromFile ReadFile mytest
 
 # Search for Rules.mk in roottest/scripts
 # Algorithm:  Find the current working directory and remove everything after
@@ -57,6 +57,9 @@ endif
 # To run a diff and ignore whitespacing use $(TestDiffW)
 
 testWithDiff: testWithDiff.log testWithDiff.ref
+	$(TestDiff)
+
+ReadFile: ReaFFile.log
 	$(TestDiff)
 
 ReadRulesFromFile: ReadRulesFromFile.log

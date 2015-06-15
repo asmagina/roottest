@@ -3,7 +3,6 @@
 
 void runLoadRuleIntoSystem()
 {
-   TFile *f = 
    const char* filename = "test.root";
    TFile *f = TFile::Open(filename);
    if (!f) {
@@ -14,15 +13,8 @@ void runLoadRuleIntoSystem()
    std::vector<std::string> vect;
    readRulesFromFile(f, vect); 
 
-   if (vect.empty()) {
-      std::cout << "No list with rules." << std::endl;
-      return;
+   for (int i = 0; i < vect.size(); i++) {
+      std::cout << "Adding rule " << vect[i] << " ..." << std::endl;
+      loadRuleIntoSystem(vect[i].c_str());
    }
-
-   std::cout << "List of rules: " << std::endl;
-   for (std::vector<std::string>::iterator it = vect.begin(); it != vect.end(); ++it)
-      std::cout << *it << std::endl;
-
-    
-   
 }
