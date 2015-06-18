@@ -149,7 +149,7 @@ bool loadRuleIntoSystem(const char* rule)
    gROOT->ProcessLine(".rawInput");
    gROOT->ProcessLine(wrapper.c_str());
    gROOT->ProcessLine(".rawInput");
- 
+/*
 //   cling::runtime::gCling->declare("char* target = \"ehqeiqheoiq\";");
    cling::runtime::gCling->declare(Form("TVirtualObject obj(TClass::GetClass(\"%s\"));", // !!
                                         ruleobj->GetSourceClass()));             //
@@ -165,7 +165,30 @@ bool loadRuleIntoSystem(const char* rule)
    cling::Value v;
    cling::runtime::gCling->evaluate(wrapper_name.c_str(), v);
 //   ruleobj->SetReadFunctionPointer(v.getPtr());
+*/
+   
+   //
+   // check identical rules
+   //
+   TObjArrayIter it(rset->GetRules());
+   ROOT::TSchemaRule *r;
 
+   TString s1, s2;
+   ruleobj->AsString(s1);
+   while( TObject* obj = it.Next() ) {
+      r = (ROOT::TSchemaRule *) obj;
+      r->AsString(s2);
+  
+      if (s1 == s2) {
+         std::cout << "Rule already exists." << std::endl;
+         delete ruleobj;
+         return false;
+      }   
+   }
+
+   //
+   // add to TSchemaRuleSet
+   //
    TString errmsg;
    if( !rset->AddRule( ruleobj, ROOT::TSchemaRuleSet::kCheckConflict, &errmsg ) ) {
       ::Warning( "TClass::AddRule", "The rule for class: \"%s\": version, \"%s\" and data members: \"%s\" has been skipped because it conflicts with one of the other rules (%s).",
