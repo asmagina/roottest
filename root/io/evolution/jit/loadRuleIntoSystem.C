@@ -1,11 +1,7 @@
-bool createRuleWrapper(const ROOT::TSchemaRule* ruleobj, int n, std::string& res)
-{
-   res  = "static void read_";
-   res += ruleobj->GetTargetClass();
-   res += Form("_%d", n);
-   res += "( char* target, TVirtualObject *oldObj )\n";
-   res += "{\n";
+#include "cling/Interpreter/Interpreter.h"
 
+void createRuleWrapper(const ROOT::TSchemaRule* ruleobj, std::string& res)
+{
    //
    // init source
    //  
@@ -98,7 +94,7 @@ bool createRuleWrapper(const ROOT::TSchemaRule* ruleobj, int n, std::string& res
       res += ((TObjString*)((*ruleobj->GetTarget())[i]))->String();
       res += " = *(";
       res += ((TObjString*)((*ruleobj->GetTarget())[i]))->String();
-      res +=  "_t *)(target + offset_";
+      res +=  "_t *)(target+offset_";
       res += ((TObjString*)((*ruleobj->GetTarget())[i]))->String();
       res += ");\n";
    }
@@ -112,9 +108,6 @@ bool createRuleWrapper(const ROOT::TSchemaRule* ruleobj, int n, std::string& res
    // user's code
    //
    res += ruleobj->GetCode();
-   res += "\n};\n";
-
-   return true; 
 }
 
 bool loadRuleIntoSystem(const char* rule)
@@ -128,45 +121,59 @@ bool loadRuleIntoSystem(const char* rule)
 
    R__LOCKGUARD(gInterpreterMutex);
 
+   //
+   // compile function
+   //
    TClass *cl = TClass::GetClass( ruleobj->GetTargetClass() );
-     
+
    if (!cl) {
-      // Create an empty emulated class for now.
+    // Create an empty emulated class for now.
       cl = gInterpreter->GenerateTClass(ruleobj->GetTargetClass(), /* emulation = */ kTRUE, /*silent = */ kTRUE);
    }
 
-   ROOT::TSchemaRuleSet* rset = cl->GetSchemaRules( kTRUE );
-
-   //
-   // NOTE: works only for read rules
-   //
    std::string wrapper;
-   std::string wrapper_name = "read_";
-               wrapper_name += ruleobj->GetTargetClass();
-               wrapper_name += Form("_%d", rset->GetRules()->GetEntries());
-   createRuleWrapper(ruleobj, rset->GetRules()->GetEntries(), wrapper);
+   createRuleWrapper(ruleobj, wrapper);
 
-   gROOT->ProcessLine(".rawInput");
-   gROOT->ProcessLine(wrapper.c_str());
-   gROOT->ProcessLine(".rawInput");
-/*
-//   cling::runtime::gCling->declare("char* target = \"ehqeiqheoiq\";");
-   cling::runtime::gCling->declare(Form("TVirtualObject obj(TClass::GetClass(\"%s\"));", // !!
-                                        ruleobj->GetSourceClass()));             //
+   std::string name;
+   cling::runtime::gCling->createUniqueName(name);
 
-   if (cling::runtime::gCling->process(Form("%s(target, &obj)", wrapper_name.c_str())) != 
-      cling::Interpreter::CompilationResult::kSuccess) 
+   wrapper = Form("extern \"C\" void %s(char* target, TVirtualObject* obj) {\n %s \n };",
+                  name.c_str(), wrapper.c_str());
+   
+   ROOT::TSchemaRule::ReadFuncPtr_t fp = (ROOT::TSchemaRule::ReadFuncPtr_t)
+                                         cling::runtime::gCling->compileFunction(name.c_str(), wrapper.c_str()); 
+
+   std::string test_name;
+   cling::runtime::gCling->createUniqueName(test_name);
+   
+   cling::runtime::gCling->enableRawInput(true);
+   
+   gROOT->ProcessLine(Form("void %s() {\n", test_name.c_str()));
+   gROOT->ProcessLine("TBufferFile buf(TBuffer::kWrite);\n");
+   gROOT->ProcessLine(Form("buf.WriteClassBuffer(TClass::GetClass(\"%s\"), new %s());", 
+                                        ruleobj->GetTargetClass(), ruleobj->GetTargetClass()));
+   gROOT->ProcessLine(Form("TVirtualObject obj(TClass::GetClass(\"%s\"));",
+                                        ruleobj->GetSourceClass()));
+   gROOT->ProcessLine(Form("%s(buf.Buffer(), &obj);", name.c_str()));
+   gROOT->ProcessLine("} ");
+
+   cling::runtime::gCling->enableRawInput(false);
+
+   cling::Interpreter::CompilationResult result = 
+      cling::runtime::gCling->process(Form("%s()", test_name.c_str()));
+
+   cling::runtime::gCling->unload(2);
+
+   if (result != cling::Interpreter::CompilationResult::kSuccess)
    {
       std::cerr << "Compilation error." << std::endl;
+      cling::runtime::gCling->unload(1);
       delete ruleobj;
       return false;   
    }
 
-   cling::Value v;
-   cling::runtime::gCling->evaluate(wrapper_name.c_str(), v);
-//   ruleobj->SetReadFunctionPointer(v.getPtr());
-*/
-   
+   ROOT::TSchemaRuleSet* rset = cl->GetSchemaRules( kTRUE );
+
    //
    // check identical rules
    //
@@ -197,5 +204,10 @@ bool loadRuleIntoSystem(const char* rule)
       return false;
    }
 
+   //
+   // set resulting wrapping function
+   //
+   ruleobj->SetReadFunctionPointer(fp);
+ 
    return true;
 }
