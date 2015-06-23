@@ -1,54 +1,24 @@
 #include "cling/Interpreter/Interpreter.h"
 
-void extractSourceInfo(const::ROOT::TSchemaRule* ruleobj, TObjArray* types, TObjArray* dims)
-{
-   TString s;
-   ruleobj->AsString(s);
-      
-   ROOT::MembersMap_t rule_values;
-   std::string error_string;
-   ROOT::ParseRule( s.Data(), rule_values, error_string) ;
-       
-   ROOT::MembersMap_t ::const_iterator it1;
-   it1 = rule_values.find( "source" );
-
-   std::list<std::pair<ROOT::TSchemaType,std::string> >           elems;
-   std::list<std::pair<ROOT::TSchemaType,std::string> >::iterator it;
-      
-   ROOT::TSchemaRuleProcessor::SplitDeclaration( it1->second.c_str(), elems );
-       
-   for( it = elems.begin(); it != elems.end(); ++it ) {
-      TObjString* type = new TObjString(it->first.fType.c_str());
-      TObjString* dim  = new TObjString(it->first.fDimensions.c_str());
-      types->Add(type);
-      dims->Add(dim);
-   }
-}
-
 void createRuleWrapper(const ROOT::TSchemaRule* ruleobj, std::string& res)
 {
    //
    // init source
    //  
    if (ruleobj->GetSource()) {
-      
+    
       //
       // extract source types
       //
-      TObjArray* types = new TObjArray();
-      TObjArray* dims =  new TObjArray();
-
-      extractSourceInfo(ruleobj, types, dims);
-
       res += "struct ";
       res += ruleobj->GetSourceClass();
       res += "_OnFile {\n";
    
       for (int i = 0; i < ruleobj->GetSource()->GetEntries(); i++) {
-         res += ((TObjString*)((*types)[i]))->String();
+         res += (*ruleobj->GetSource())[i]->GetTitle();
          res += " &";
-         res += ((TObjString*)((*ruleobj->GetSource())[i]))->String(); 
-         res += ((TObjString*)((*dims)[i]))->String();
+         res += (*ruleobj->GetSource())[i]->GetName(); 
+         res += ((ROOT::TSchemaRule::TSources*)((*ruleobj->GetSource())[i]))->GetDimensions();
          res += ";\n";
       }
 
@@ -56,11 +26,11 @@ void createRuleWrapper(const ROOT::TSchemaRule* ruleobj, std::string& res)
       res += "_OnFile";
       res += "(";
       for (int i = 0; i < ruleobj->GetSource()->GetEntries(); i++) {
-         res += ((TObjString*)((*types)[i]))->String();
+         res += (*ruleobj->GetSource())[i]->GetTitle();
          res += " &";
-         res += ((TObjString*)((*ruleobj->GetSource())[i]))->String(); 
+         res += (*ruleobj->GetSource())[i]->GetName(); 
          res += "_tmp";
-         res += ((TObjString*)((*dims)[i]))->String();
+         res += ((ROOT::TSchemaRule::TSources*)((*ruleobj->GetSource())[i]))->GetDimensions();
          
          if (i != ruleobj->GetSource()->GetEntries() - 1)
             res += ",";
@@ -68,9 +38,9 @@ void createRuleWrapper(const ROOT::TSchemaRule* ruleobj, std::string& res)
       
       res += ") : ";
       for (int i = 0; i < ruleobj->GetSource()->GetEntries(); i++) {
-         res += ((TObjString*)((*ruleobj->GetSource())[i]))->String(); 
+         res += (*ruleobj->GetSource())[i]->GetName(); 
          res += "(";
-         res += ((TObjString*)((*ruleobj->GetSource())[i]))->String(); 
+         res += (*ruleobj->GetSource())[i]->GetName(); 
          res += "_tmp)";         
          if (i != ruleobj->GetSource()->GetEntries() - 1)
             res += ", ";
@@ -85,9 +55,9 @@ void createRuleWrapper(const ROOT::TSchemaRule* ruleobj, std::string& res)
          res += "static Long_t offset_Onfile_";
          res += ruleobj->GetSourceClass();
          res += "_";
-         res += ((TObjString*)((*ruleobj->GetSource())[i]))->String();
+         res += (*ruleobj->GetSource())[i]->GetName();
          res += " = oldObj->GetClass()->GetDataMemberOffset(\"";
-         res += ((TObjString*)((*ruleobj->GetSource())[i]))->String();
+         res += (*ruleobj->GetSource())[i]->GetName();
          res += "\");\n";
       }
   
@@ -97,21 +67,18 @@ void createRuleWrapper(const ROOT::TSchemaRule* ruleobj, std::string& res)
    
       for (int i = 0; i < ruleobj->GetSource()->GetEntries(); i++) {
          res += "*( ";
-         res += ((TObjString*)((*types)[i]))->String();
+         res += (*ruleobj->GetSource())[i]->GetTitle();
          res +="*)(";
          res += "onfile_add+offset_Onfile_";
          res += ruleobj->GetSourceClass();
          res += "_";
-         res += ((TObjString*)((*ruleobj->GetSource())[i]))->String();
+         res += (*ruleobj->GetSource())[i]->GetName();
          res += ")";
          if (i != ruleobj->GetSource()->GetEntries() - 1)
             res += ", \n";
       }  
    
       res += ");\n";
-
-      delete types;
-      delete dims;
    } 
 
    //
