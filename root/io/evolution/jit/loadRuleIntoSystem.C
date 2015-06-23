@@ -175,6 +175,13 @@ bool loadRuleIntoSystem(const char* rule)
    //
    // compile function
    //
+   if (ruleobj->GetInclude()) {
+      for (int i = 0; i < ruleobj->GetInclude()->GetEntries(); i++) {
+         cling::runtime::gCling->process(Form("#include %s", 
+                                              ((TObjString*)((*ruleobj->GetInclude())[i]))->GetString().Data()));
+      }   
+   }
+
    std::string wrapper;
    createRuleWrapper(ruleobj, wrapper);
 
