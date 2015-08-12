@@ -91,6 +91,8 @@ public:
    EventHeader() : fEvtNum(0), fRun(0), fDate(0), fDetectorN(-1) { }
    virtual ~EventHeader() { }
    void   Set(Int_t i, Int_t r, Int_t d, Int_t n) { fEvtNum = i; fRun = r; fDate = d; fDetectorN = n; }
+   
+   void   SetDetectorN(Int_t n)  { fDetectorN = n; }
    Int_t  GetEvtNum() const { return fEvtNum; }
    Int_t  GetRun() const { return fRun; }
    Int_t  GetDate() const { return fDate; }
@@ -144,6 +146,8 @@ public:
    void          SetMeasure(UChar_t which, Int_t what);
    void          SetMatrix(UChar_t x, UChar_t y, Double32_t what) { if (x<3&&y<3) fMatrix[x][y]=what;}
    void          SetRandomVertex();
+
+   void SetAnotherNewData(Float_t f) { fAnotherNewData = f;}
 
    Float_t       GetAnotherNewData() const { return fAnotherNewData; }
    Float_t       GetClosestDistance(Int_t i) {return fClosestDistance[i];}
