@@ -78,7 +78,6 @@
 
 #include "Event_5.h"
 
-
 ClassImp(EventHeader)
 ClassImp(Event)
 ClassImp(Track)
@@ -220,7 +219,7 @@ void Event::Reset(Option_t * /*option*/)
 void Event::SetHeader(Int_t i, Int_t run, Int_t date, Float_t random)
 {
    fNtrack = 0;
-   fEvtHdr.Set(i, run, date, -1);
+   fEvtHdr.Set(i, run, date);
    if (!fgHist) fgHist = new TH1F("hstat","Event Histogram",100,0,1);
    fH = fgHist;
    fH->Fill(random);

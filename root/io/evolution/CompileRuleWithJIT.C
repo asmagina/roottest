@@ -85,30 +85,8 @@ void CompileRuleWithJIT()
    else 
       cout << "[ FAIL ] [ Rule is expected to be ok ]" << endl;
 
-   // rule is ok
+   // rule is in conflict
    cout << "[ TEST 7 ]" << endl;
-   if ( TClass::AddRule("type=read sourceClass=\"EventHeader\" "
-                        "targetClass=\"EventHeader\" "
-                        "source=\"\" "
-                        "target=\"fDetectorN\" version=\"[-1]\" "
-                        "code=\"{newObj->SetDetectorN(10);}\"", kFALSE) )
-      cout << "[ SUCCEED ] [ As expected, rule is ok ]" << endl;
-   else 
-      cout << "[ FAIL ] [ Rule is expected to be ok ]" << endl;
-   
-   // rule is in conflict
-   cout << "[ TEST 8 ]" << endl;
-   if ( !TClass::AddRule("type=read sourceClass=\"EventHeader\" "
-                         "targetClass=\"EventHeader\" "
-                         "source=\"\" "
-                         "target=\"fDetectorN\" version=\"[-1]\" "
-                         "code=\"{newObj->SetDetectorN(-20);}\"", kFALSE) )
-      cout << "[ SUCCEED ] [ As expected, rule is in conflict ]" << endl;
-   else 
-      cout << "[ FAIL ] [ Rule is expected to be in conflict ]" << endl;
-   
-   // rule is in conflict
-   cout << "[ TEST 9 ]" << endl;
    if ( !TClass::AddRule("type=read sourceClass=\"Event\" "
                          "targetClass=\"Event\" "
                          "source=\"\" "

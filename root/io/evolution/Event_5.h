@@ -85,20 +85,16 @@ private:
    Int_t   fRun;
    Int_t   fDate;
 
-   Int_t   fDetectorN; // new
-
 public:
-   EventHeader() : fEvtNum(0), fRun(0), fDate(0), fDetectorN(-1) { }
+   EventHeader() : fEvtNum(0), fRun(0), fDate(0) { }
    virtual ~EventHeader() { }
-   void   Set(Int_t i, Int_t r, Int_t d, Int_t n) { fEvtNum = i; fRun = r; fDate = d; fDetectorN = n; }
+   void   Set(Int_t i, Int_t r, Int_t d) { fEvtNum = i; fRun = r; fDate = d; }
    
-   void   SetDetectorN(Int_t n)  { fDetectorN = n; }
    Int_t  GetEvtNum() const { return fEvtNum; }
    Int_t  GetRun() const { return fRun; }
    Int_t  GetDate() const { return fDate; }
-   Int_t  GetDetectorN() const { return fDetectorN; } 
 
-   ClassDef(EventHeader,2)  //Event Header
+   ClassDef(EventHeader,1)  //Event Header
 };
 
 
