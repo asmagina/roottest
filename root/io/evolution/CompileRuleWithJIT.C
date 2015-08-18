@@ -93,10 +93,31 @@ void CompileRuleWithJIT()
                          "include=\"<TMath.h>;\" "
                          "target=\"fAnotherNewData\" version=\"[2]\" "
                          "code=\"{newObj->SetAnotherNewData(10);}\"", kFALSE) )
-      cout << "[ SUCCEED ] [As expected, rule is in conflict ]" << endl;
+      cout << "[ SUCCEED ] [ As expected, rule is in conflict ]" << endl;
    else 
       cout << "[ FAIL ] [ Rule is expected to be in conflict ]" << endl;
 
+   // rule is ok
+   cout << "[ TEST 8 ]" << endl;
+   if ( TClass::AddRule("type=read sourceClass=\"Event\" "
+                         "targetClass=\"Event\" "
+                         "source=\"UInt_t fFlag;\" "
+                         "target=\"fFlag\" checksum=\"[4227322039]\" "
+                         "code=\"{fFlag = onfile.fFlag + 1000;}\"", kFALSE) )
+      cout << "[ SUCCEED ] [ As expected, rule is ok ]" << endl;
+   else 
+      cout << "[ FAIL ] [ Rule is expected to be ok ]" << endl;
+
+   // rule is in conflict
+   cout << "[ TEST 9 ]" << endl;
+   if ( !TClass::AddRule("type=read sourceClass=\"Event\" "
+                         "targetClass=\"Event\" "
+                         "source=\"UInt_t fFlag;\" "
+                         "target=\"fFlag\" checksum=\"[4227322039]\" "
+                         "code=\"{fFlag = onfile.fFlag * 70;}\"", kFALSE) )
+      cout << "[ SUCCEED ] [ As expected, rule is in conflict ]" << endl;
+   else 
+      cout << "[ FAIL ] [ Rule is expected to be in conflict ]" << endl;
 
    Event* event = new Event();
    TTree* t = (TTree*)f->Get("T");
