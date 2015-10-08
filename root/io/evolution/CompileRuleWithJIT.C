@@ -1,6 +1,8 @@
 #include "TClass.h"
 #include "TFile.h"
+#include "TObjArray.h"
 #include "TROOT.h"
+#include "TSchemaRuleSet.h"
 #include "TTree.h"
 #include <iostream>
 
@@ -110,14 +112,19 @@ void CompileRuleWithJIT()
 
    // rule is in conflict
    cout << "[ TEST 9 ]" << endl;
-   if ( !TClass::AddRule("type=read sourceClass=\"Event\" "
+   TClass* cl = TClass::GetClass("Event");
+   Int_t nrules = cl->GetSchemaRules()->GetRules()->GetEntries(); 
+
+   Bool_t flag = TClass::AddRule("type=read sourceClass=\"Event\" "
                          "targetClass=\"Event\" "
                          "source=\"UInt_t fFlag;\" "
                          "target=\"fFlag\" checksum=\"[4227322039]\" "
-                         "code=\"{fFlag = onfile.fFlag * 70;}\"", kFALSE) )
-      cout << "[ SUCCEED ] [ As expected, rule is in conflict ]" << endl;
+                         "code=\"{fFlag = onfile.fFlag * 70;}\"", kFALSE);
+
+   if (flag == kTRUE && cl->GetSchemaRules()->GetRules()->GetEntries() ==  nrules)
+      cout << "[ SUCCEED ] [ As expected, rule is already exists ]" << endl;
    else 
-      cout << "[ FAIL ] [ Rule is expected to be in conflict ]" << endl;
+      cout << "[ FAIL ] [ Rule is expected to be already loaded in a system ]" << endl;
 
    Event* event = new Event();
    TTree* t = (TTree*)f->Get("T");
